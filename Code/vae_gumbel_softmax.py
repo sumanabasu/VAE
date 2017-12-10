@@ -138,5 +138,5 @@ if __name__ == '__main__':
             l = loss.data[0]
         print(epoch, l)
 
-    plt.imsave("mnist_gumbel.png", vae(inputs).data[0].numpy().reshape(28, 28), cmap='gray')
+    plt.imsave("mnist_gumbel.png", vae(inputs, tou).data[0].numpy().reshape(28, 28), cmap='gray')
     #plt.show(block=True)
