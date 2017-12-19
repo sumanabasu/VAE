@@ -102,7 +102,7 @@ if __name__ == '__main__':
     N = 30 #number of categorical distributions
     tau0 = 1
     np_temp=tau0
-    epochs = 50000
+    epochs = 85 
     ANNEAL_RATE=0.00003
     MIN_TEMP=0.5
 
