@@ -95,12 +95,16 @@ if __name__ == '__main__':
 
     #iscuda = True
     input_dim = 28 * 28
-    batch_size = 32
+    batch_size = 100
     hidden1_size = 512
     hidden2_size = 256
     K = 10 #number of classes
     N = 30 #number of categorical distributions
-    tou = 1
+    tau0 = 1
+    np_temp=tau0
+    epochs = 50000
+    ANNEAL_RATE=0.00003
+    MIN_TEMP=0.5
 
     transform = transforms.Compose(
         [transforms.ToTensor()])
@@ -119,24 +123,21 @@ if __name__ == '__main__':
 
     optimizer = optim.Adam(vae.parameters(), lr=0.0001)
     l = None
-    for epoch in range(100):
+    for epoch in range(epochs):
         for i, data in enumerate(dataloader, 0):
-            
-
             inputs, classes = data
             if iscuda:
                 inputs = inputs.cuda()
             inputs, classes = Variable(inputs.resize_(batch_size, input_dim)), Variable(classes)
             optimizer.zero_grad()
             
-            outputs = vae(inputs, tou)
+            outputs = vae(inputs, np_temp)
+            np_temp=np.maximum(tau0*np.exp(-ANNEAL_RATE*(i * epoch)),MIN_TEMP)
 
             loss = vae.total_loss(inputs, outputs)
-
             loss.backward()
             optimizer.step()
             l = loss.data[0]
-        print(epoch, l)
+        print("epoch: {}, loss:{}".format(epoch, l))
 
     plt.imsave("mnist_gumbel.png", vae(inputs, tou).data[0].numpy().reshape(28, 28), cmap='gray')
-    #plt.show(block=True)
