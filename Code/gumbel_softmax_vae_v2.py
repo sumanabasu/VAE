@@ -92,7 +92,7 @@ train_op=tf.train.AdamOptimizer(learning_rate=3e-4).minimize(loss)
 
 data = []
 with tf.train.MonitoredSession() as sess:
-  for i in range(1,50000):
+  for i in range(1,50):
     batch = mnist.train.next_batch(batch_size)
     res = sess.run([train_op, loss, tau, mean_recons, mean_KL], {x : batch[0]})
     if i % 100 == 1:
@@ -103,7 +103,7 @@ with tf.train.MonitoredSession() as sess:
 # In[ ]:
 
 data = np.array(data).T
-np.save('training_data.npy', np_y)
+np.save('training_data.npy', data)
 
 # In[ ]:
 M=100*N
