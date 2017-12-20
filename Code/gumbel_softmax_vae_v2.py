@@ -129,6 +129,4 @@ axarr[3].set_title('KL')
 
 tmp = np.reshape(np_x,(-1,280,28)) # (10,280,28)
 img = np.hstack([tmp[i] for i in range(10)])
-plt.imshow(img)
-plt.grid('off')
-
+plt.imsave('training progress', img)
