@@ -91,8 +91,10 @@ train_op=tf.train.AdamOptimizer(learning_rate=3e-4).minimize(loss)
 # In[ ]:
 
 data = []
-with tf.train.MonitoredSession() as sess:
-  for i in range(1,5000):
+sess=tf.InteractiveSession()
+sess.run(init_op)
+
+for i in range(1,5000):
     batch = mnist.train.next_batch(batch_size)
     res = sess.run([train_op, loss, tau, mean_recons, mean_KL], {x : batch[0]})
     if i % 100 == 1:
@@ -100,19 +102,17 @@ with tf.train.MonitoredSession() as sess:
     if i % 1000 == 1:
       print('Step %d, Loss: %0.3f' % (i,res[1]))
     
-    # end training - do an eval
-  M=100*N
-  np_y = np.zeros((M,K))
-  np_y[range(M),np.random.choice(K,M)] = 1
-  np_y = np.reshape(np_y,[100,N,K])
-
-  x_p=p_x.mean()
-  np_x= sess.run(x_p,{y:np_y})
-
+# end training - do an eval
 data = np.array(data).T
 np.save('training_data.npy', data)
+  
+M=100*N
+np_y = np.zeros((M,K))
+np_y[range(M),np.random.choice(K,M)] = 1
+np_y = np.reshape(np_y,[100,N,K])
 
-# In[ ]:
+x_p=p_x.mean()
+np_x= sess.run(x_p,{y:np_y})
 
 np_y = np_y.reshape((10,10,N,K))
 np_y = np.concatenate(np.split(np_y,10,axis=0),axis=3)
