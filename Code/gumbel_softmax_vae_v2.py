@@ -100,33 +100,29 @@ with tf.train.MonitoredSession() as sess:
     if i % 1000 == 1:
       print('Step %d, Loss: %0.3f' % (i,res[1]))
   # end training - do an eval
-  batch = mnist.test.next_batch(batch_size)
-  np_x = sess.run(x_mean, {x : batch[0]})
-
-
 # In[ ]:
 
 data = np.array(data).T
-
-
-# In[ ]:
-
-f,axarr=plt.subplots(1,4,figsize=(18,6))
-axarr[0].plot(data[0],data[1])
-axarr[0].set_title('Loss')
-
-axarr[1].plot(data[0],data[2])
-axarr[1].set_title('Temperature')
-
-axarr[2].plot(data[0],data[3])
-axarr[2].set_title('Recons')
-
-axarr[3].plot(data[0],data[4])
-axarr[3].set_title('KL')
-
+np.save('training_data.npy', np_y)
 
 # In[ ]:
+M=100*N
+np_y = np.zeros((M,K))
+np_y[range(M),np.random.choice(K,M)] = 1
+np_y = np.reshape(np_y,[100,N,K])
 
-tmp = np.reshape(np_x,(-1,280,28)) # (10,280,28)
-img = np.hstack([tmp[i] for i in range(10)])
-plt.imsave('training progress', img)
+x_p=p_x.mean()
+np_x= sess.run(x_p,{y:np_y})
+
+np_y = np_y.reshape((10,10,N,K))
+np_y = np.concatenate(np.split(np_y,10,axis=0),axis=3)
+np_y = np.concatenate(np.split(np_y,10,axis=1),axis=2)
+
+np_x = np_x.reshape((10,10,28,28))
+# split into 10 (1,10,28,28) images, concat along columns -> 1,10,28,280
+np_x = np.concatenate(np.split(np_x,10,axis=0),axis=3)
+# split into 10 (1,1,28,280) images, concat along rows -> 1,1,280,280
+np_x = np.concatenate(np.split(np_x,10,axis=1),axis=2)
+
+np.save('categorical_samples.npy', np_y)
+np.save('reconstruced.npy', np_x)
