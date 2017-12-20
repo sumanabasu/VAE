@@ -99,20 +99,20 @@ with tf.train.MonitoredSession() as sess:
       data.append([i] + res[1:])
     if i % 1000 == 1:
       print('Step %d, Loss: %0.3f' % (i,res[1]))
-  # end training - do an eval
-# In[ ]:
+    
+    # end training - do an eval
+    M=100*N
+    np_y = np.zeros((M,K))
+    np_y[range(M),np.random.choice(K,M)] = 1
+    np_y = np.reshape(np_y,[100,N,K])
+
+    x_p=p_x.mean()
+    np_x= sess.run(x_p,{y:np_y})
 
 data = np.array(data).T
 np.save('training_data.npy', data)
 
 # In[ ]:
-M=100*N
-np_y = np.zeros((M,K))
-np_y[range(M),np.random.choice(K,M)] = 1
-np_y = np.reshape(np_y,[100,N,K])
-
-x_p=p_x.mean()
-np_x= sess.run(x_p,{y:np_y})
 
 np_y = np_y.reshape((10,10,N,K))
 np_y = np.concatenate(np.split(np_y,10,axis=0),axis=3)
