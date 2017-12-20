@@ -44,6 +44,7 @@ class VAE(torch.nn.Module):
         self.softmax = torch.nn.Softmax()
         self.K=K
         self.N=N
+        self.latents = []
         self.iscuda = iscuda
 
     def _sample_latent(self, h_enc, temperature):
@@ -73,6 +74,7 @@ class VAE(torch.nn.Module):
     def forward(self, x, temperature):
         h_enc = self.encoder(x)
         z = self._sample_latent(h_enc, temperature)
+        self.latents.append(z.data.numpy())
         return self.decoder(z)
 
     def total_loss(self, inputs, outputs):
@@ -84,7 +86,7 @@ class VAE(torch.nn.Module):
         
         BCE = torch.mean(F.binary_cross_entropy(outputs, inputs))
 
-        return torch.mean(BCE-KL)
+        return torch.mean(BCE)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='VAE MNIST Example')      
@@ -99,7 +101,7 @@ if __name__ == '__main__':
     hidden1_size = 512
     hidden2_size = 256
     K = 10 #number of classes
-    N = 30 #number of categorical distributions
+    N = 1 #number of categorical distributions
     tau0 = 1
     np_temp=tau0
     epochs = 85 
@@ -124,8 +126,10 @@ if __name__ == '__main__':
     optimizer = optim.Adam(vae.parameters(), lr=0.0001)
     l = None
     for epoch in range(epochs):
+        #cls = []
         for i, data in enumerate(dataloader, 0):
             inputs, classes = data
+            #cls.append(classes)
             if iscuda:
                 inputs = inputs.cuda()
             inputs, classes = Variable(inputs.resize_(batch_size, input_dim)), Variable(classes)
@@ -139,5 +143,7 @@ if __name__ == '__main__':
             optimizer.step()
             l = loss.data[0]
         print("epoch: {}, loss:{}".format(epoch, l))
+        #np.save('latents.npy', vae.latents)
+        #np.save('classes.npy', cls)
 
     plt.imsave("mnist_gumbel.png", vae(inputs, tou).data[0].numpy().reshape(28, 28), cmap='gray')
