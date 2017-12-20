@@ -101,13 +101,13 @@ with tf.train.MonitoredSession() as sess:
       print('Step %d, Loss: %0.3f' % (i,res[1]))
     
     # end training - do an eval
-    M=100*N
-    np_y = np.zeros((M,K))
-    np_y[range(M),np.random.choice(K,M)] = 1
-    np_y = np.reshape(np_y,[100,N,K])
+  M=100*N
+  np_y = np.zeros((M,K))
+  np_y[range(M),np.random.choice(K,M)] = 1
+  np_y = np.reshape(np_y,[100,N,K])
 
-    x_p=p_x.mean()
-    np_x= sess.run(x_p,{y:np_y})
+  x_p=p_x.mean()
+  np_x= sess.run(x_p,{y:np_y})
 
 data = np.array(data).T
 np.save('training_data.npy', data)
