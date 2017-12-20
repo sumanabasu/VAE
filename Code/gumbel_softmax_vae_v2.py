@@ -95,7 +95,7 @@ sess=tf.InteractiveSession()
 init_op=tf.global_variables_initializer()
 sess.run(init_op)
 
-for i in range(1,5000):
+for i in range(1,50000):
     batch = mnist.train.next_batch(batch_size)
     res = sess.run([train_op, loss, tau, mean_recons, mean_KL], {x : batch[0]})
     if i % 100 == 1:
