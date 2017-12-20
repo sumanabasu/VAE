@@ -92,7 +92,7 @@ train_op=tf.train.AdamOptimizer(learning_rate=3e-4).minimize(loss)
 
 data = []
 sess=tf.InteractiveSession()
-init_op=global_variables_initializer()
+init_op=tf.global_variables_initializer()
 sess.run(init_op)
 
 for i in range(1,5000):
