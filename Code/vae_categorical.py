@@ -75,7 +75,7 @@ class VAE(torch.nn.Module):
 
         # Gumbel-Softmax samples are - softmax((probs + gumbel(0,1).sample)/temperature)
         y = self.hidden + g
-        softmax = torch.nn.Softmax(dim=-1) # -1 indicates the last dimension
+        softmax = torch.nn.Softmax() # -1 indicates the last dimension
 
         return softmax(y/1.0)
 
@@ -109,7 +109,7 @@ class VAE(torch.nn.Module):
         # Reconstruction Loss
         # Instantiate Bernoulli distribution with x_hat as log odds for each pixel
         #Then, binary_cross_entropy = log probability evaluated at x
-        softmax = torch.nn.Softmax(dim=-1)
+        softmax = torch.nn.Softmax()
         x_prob = softmax(x_hat)
         #p_x = torch.distributions.Bernoulli(probs=x_hat)
         recons_loss = torch.sum(x * torch.log(x_prob + eps), dim=1)
