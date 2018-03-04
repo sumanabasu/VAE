@@ -70,6 +70,8 @@ class VAE(torch.nn.Module):
         # pass through it
         # gumbel sample is -log(-log(U))
         g = Variable(-torch.log(-torch.log(U + eps) + eps), requires_grad=False)
+        if self.iscuda:
+            g = g.cuda()
 
         # Gumbel-Softmax samples are - softmax((probs + gumbel(0,1).sample)/temperature)
         y = self.hidden + g
@@ -79,7 +81,11 @@ class VAE(torch.nn.Module):
 
     def forward(self, x):
         # dynamic binarization of input
-        net = Variable(torch.rand(x.size()), requires_grad=False) < x
+        t = Variable(torch.rand(x.size()), requires_grad=False)
+        if self.iscuda:
+            t = t.cuda()
+
+        net = t < x
     
         h_enc = self.encoder(net.float())
         tou = Variable(torch.from_numpy(np.array([self.temperature])), requires_grad=False)
