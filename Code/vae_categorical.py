@@ -5,7 +5,7 @@ import argparse
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
-import torch.distributions
+#import torch.distributions
 import torchvision
 from torchvision import transforms
 import torch.optim as optim
@@ -102,11 +102,12 @@ class VAE(torch.nn.Module):
 
         # Reconstruction Loss
         # Instantiate Bernoulli distribution with x_hat as log odds for each pixel
-        # Then, binary_cross_entropy = log probability evaluated at x
+        #Then, binary_cross_entropy = log probability evaluated at x
         softmax = torch.nn.Softmax(dim=-1)
         x_prob = softmax(x_hat)
-        p_x = torch.distributions.Bernoulli(probs=x_prob)
-        recons_loss = torch.sum(p_x.log_prob(x), dim=1)
+        #p_x = torch.distributions.Bernoulli(probs=x_hat)
+        recons_loss = torch.sum(x * torch.log(x_prob + eps), dim=1)
+        #recons_loss = torch.sum(p_x.log_prob(x), dim=1)
 
         # KL Divergence = entropy (self.latent) - cross_entropy(self.latent, uniform log-odds)
         q_y = softmax(self.hidden) # convert hidden layer values to probabilities
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     if iscuda:
         vae.cuda()
 
-    optimizer = optim.Adam(vae.parameters(), lr=3e-2)
+    optimizer = optim.Adam(vae.parameters(), lr=1e-2)
     l = 0
     rl = 0
     kl = 0
