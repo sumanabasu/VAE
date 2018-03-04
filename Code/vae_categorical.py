@@ -10,7 +10,7 @@ import torchvision
 from torchvision import transforms
 import torch.optim as optim
 from torch import nn
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 class Encoder(torch.nn.Module):
     def __init__(self, D_in, D_out, D_layers=[]):
