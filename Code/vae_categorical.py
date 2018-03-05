@@ -156,7 +156,7 @@ if __name__ == '__main__':
     if iscuda:
         vae.cuda()
 
-    optimizer = optim.Adam(vae.parameters(), lr=1e-2)
+    optimizer = optim.Adam(vae.parameters(), lr=3e-4)
     l = 0
     rl = 0
     kl = 0
