@@ -5,7 +5,6 @@ import argparse
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
-#import torch.distributions
 import torchvision
 from torchvision import transforms
 import torch.optim as optim
@@ -38,7 +37,7 @@ class Decoder(torch.nn.Module):
 
 class VAE(torch.nn.Module):
 
-    def __init__(self, K, N, temperature, hidden_layers, iscuda):
+    def __init__(self, K, N, temperature, input_dim, hidden_layers, iscuda):
         """
         Categorical Variational Autoencoder
         K: Number of Cateories or Classes
@@ -58,6 +57,7 @@ class VAE(torch.nn.Module):
     def _sample_latent(self, tou):
         """
         Return the latent normal sample y ~ gumbel_softmax(x)
+        tou = temperature Variable to be learnt
         """
         eps = 1e-20
         
@@ -77,9 +77,14 @@ class VAE(torch.nn.Module):
         y = self.hidden + g
         softmax = torch.nn.Softmax(dim=-1) # -1 indicates the last dimension
 
-        return softmax(y/1.0)
+        return softmax(y/1.0) #keep the temperature fixed at 1.0
 
     def forward(self, x):
+        """
+        Forward computation Graph
+        x = inputs
+        """
+        
         # dynamic binarization of input
         t = Variable(torch.rand(x.size()), requires_grad=False)
         if self.iscuda:
@@ -89,6 +94,9 @@ class VAE(torch.nn.Module):
     
         h_enc = self.encoder(net.float())
         tou = Variable(torch.from_numpy(np.array([self.temperature])), requires_grad=False)
+        if self.iscuda:
+            tou = tou.cuda()
+
         self.hidden = h_enc.view(-1, self.N, self.K)
         bsize = self.hidden.size()[0]
         self.latent = self._sample_latent(tou)
@@ -107,13 +115,9 @@ class VAE(torch.nn.Module):
         eps = 1e-20 # to avoid log of 0
 
         # Reconstruction Loss
-        # Instantiate Bernoulli distribution with x_hat as log odds for each pixel
-        #Then, binary_cross_entropy = log probability evaluated at x
         softmax = torch.nn.Softmax(dim=-1)
         x_prob = softmax(x_hat)
-        #p_x = torch.distributions.Bernoulli(probs=x_hat)
         recons_loss = torch.sum(x * torch.log(x_prob + eps), dim=1)
-        #recons_loss = torch.sum(p_x.log_prob(x), dim=1)
 
         # KL Divergence = entropy (self.latent) - cross_entropy(self.latent, uniform log-odds)
         q_y = softmax(self.hidden) # convert hidden layer values to probabilities
@@ -124,10 +128,9 @@ class VAE(torch.nn.Module):
         
         # total loss = reconstruction loss + KL Divergence
         loss = -torch.mean(recons_loss - KL_divergence)
-        self.recons_loss = -torch.mean(recons_loss).data[0]
-        self.kl_loss = -torch.mean(-KL_divergence).data[0]
+        self.recons_loss = -torch.mean(recons_loss).data[0] # for visualization purposes
+        self.kl_loss = -torch.mean(-KL_divergence).data[0]  # for visualization purposes
         return loss 
-        #return -torch.mean(recons_loss)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='VAE MNIST Example')      
@@ -144,15 +147,15 @@ if __name__ == '__main__':
     K = 10 #number of classes
     N = 20 #number of categorical distributions
     tau0 = 1
-    epochs = 85 
+    epochs = 200
 
     transform = transforms.Compose([transforms.ToTensor()])
     mnist = torchvision.datasets.MNIST('./', download=True, transform=transform)
 
-    dataloader = torch.utils.data.DataLoader(mnist, batch_size=batch_size,
+    dataloader = torch.utils.data.DataLoader(mnist, train = True, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
 
-    vae = VAE(K, N, tau0, [hidden1_size, hidden2_size], iscuda)
+    vae = VAE(K, N, tau0, input_dim, [hidden1_size, hidden2_size], iscuda)
     if iscuda:
         vae.cuda()
 
@@ -184,3 +187,17 @@ if __name__ == '__main__':
             optimizer.step()
 
         print "debug-epoch: ", e, ", error: ", l/i, ", recons error: ", rl/i, ", kl divergence: ", kl/i
+    
+    # Validation Set
+    testloader = torch.utils.data.DataLoader(mnist, train = False, batch_size=batch_size,
+                                             shuffle=True, num_workers=2)
+    l = 0
+    for i, data in enumerate(dataloader, 0):
+        inputs, _ = data
+        inputs = Variable(inputs.resize_(batch_size, input_dim))
+        if iscuda:
+            inputs = inputs.cuda()
+        inputs = Variable(inputs.resize_(batch_size, input_dim))
+        outputs = vae(inputs)
+        latents = vae.latent
+        
