@@ -152,7 +152,7 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor()])
     mnist = torchvision.datasets.MNIST('./', download=True, transform=transform)
 
-    dataloader = torch.utils.data.DataLoader(mnist, train = True, batch_size=batch_size,
+    dataloader = torch.utils.data.DataLoader(mnist, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
 
     vae = VAE(K, N, tau0, input_dim, [hidden1_size, hidden2_size], iscuda)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
         print "debug-epoch: ", e, ", error: ", l/i, ", recons error: ", rl/i, ", kl divergence: ", kl/i
     
     # Validation Set
-    testloader = torch.utils.data.DataLoader(mnist, train = False, batch_size=batch_size,
+    testloader = torch.utils.data.DataLoader(mnist, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
     l = 0
     for i, data in enumerate(dataloader, 0):
